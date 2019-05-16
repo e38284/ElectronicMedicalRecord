@@ -7,75 +7,60 @@
 //
 
 import UIKit
+import ESTabBarController
 
-class ViewController: UIViewController ,UITabBarDelegate{
-    
-    private var myTabBar:UITabBar!
+class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // 親Viewの横幅と縦幅を取得
-        let width = self.view.frame.width
-        let height = self.view.frame.height
-        //デフォルトは49
-        let tabBarHeight:CGFloat = 49
-        
-        /**   TabBarを設置   **/
-        myTabBar = UITabBar()
-        myTabBar.frame = CGRect(x:0,y:height - tabBarHeight,width:width,height:tabBarHeight)
-        //バーの色
-        myTabBar.barTintColor = UIColor.lightGray
-        //選択されていないボタンの色
-        myTabBar.unselectedItemTintColor = UIColor.white
-        //ボタンを押した時の色
-        myTabBar.tintColor = UIColor(red: 0.1, green: 0.7, blue: 0.9, alpha: 1.0)
-        
-        //ボタンを生成
-        let ownerInfo:UITabBarItem = UITabBarItem(
-            title: "飼い主様情報",
-            image: UIImage(named:"user-7"),
-            tag: 1)
-        let selectRecord:UITabBarItem = UITabBarItem(
-            title: "カルテ選択",
-            image: UIImage(named:"file-three-7"),
-            tag: 2)
-        let describeRecord:UITabBarItem = UITabBarItem(
-            title: "カルテ記述",
-            image: UIImage(named:"fountain-pen-7"),
-            tag: 3)
-        let searchRecord:UITabBarItem = UITabBarItem(
-            title: "カルテ検索",
-            image: UIImage(named:"search-detail-7"),
-            tag: 4)
-        let setting:UITabBarItem = UITabBarItem(
-            title: "設定",
-            image: UIImage(named:"dot-more-7"),
-            tag: 5)
-        //ボタンをタブバーに配置する
-        myTabBar.items = [ownerInfo,selectRecord,describeRecord,searchRecord,setting]
-        //デリゲートを設定する
-        myTabBar.delegate = self
-        
-        self.view.addSubview(myTabBar)
+        setupTab()
     }
-    func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
+    
+    func setupTab() {
         
+        // 画像のファイル名を指定してESTabBarControllerを作成する
+        let tabBarController: ESTabBarController! = ESTabBarController(tabIconNames: ["user-7", "file-three-7", "fountain-pen-7", "search-detail-7", "dot-more-7"])
+        
+        // 選択時のアイコンの色と真ん中のボタンを設定する(オレンジ)
+        tabBarController.selectedColor = UIColor(red: 1.0, green: 0.44, blue: 0.11, alpha: 1)
+        // 背景色(薄いオレンジ)
+        tabBarController.buttonsBackgroundColor = UIColor(red: 0.96, green: 0.91, blue: 0.87, alpha: 1)
+        // 選択時の下線の太さ
+        tabBarController.selectionIndicatorHeight = 5
+        
+        // 作成したESTabBarControllerを親のViewController（＝self）に追加する
+        addChild(tabBarController)
+        let tabBarView = tabBarController.view!
+        tabBarView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(tabBarView)
+        let safeArea = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            tabBarView.topAnchor.constraint(equalTo: safeArea.topAnchor),
+            tabBarView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor),
+            tabBarView.leadingAnchor.constraint(equalTo: safeArea.leadingAnchor),
+            tabBarView.trailingAnchor.constraint(equalTo: safeArea.trailingAnchor),
+            ])
+        tabBarController.didMove(toParent: self)
+        
+        // タブをタップした時に表示するViewControllerを設定する
+        let ownerInfoViewController = storyboard?.instantiateViewController(withIdentifier: "OwnerInfo")
+        let selectRecordViewController = storyboard?.instantiateViewController(withIdentifier: "SelectRecord")
         let searchRecordViewController = storyboard?.instantiateViewController(withIdentifier: "SearchRecord")
-        switch item.tag{
-        case 1:
-            myTabBar.setViewControllers(searchRecordViewController, at: 0)
-        case 2:
-            print("２")
-        case 3:
-            print("３")
-        case 4:
-            print("４")
-        case 5:
-            print("５")
-        default : return
-            
-        }
+        let settingViewController = storyboard?.instantiateViewController(withIdentifier: "Setting")
+        
+        tabBarController.setView(ownerInfoViewController, at: 0)
+        tabBarController.setView(selectRecordViewController, at: 1)
+        tabBarController.setView(searchRecordViewController, at: 3)
+        tabBarController.setView(settingViewController, at: 4)
+        
+        // 真ん中のタブはボタンとして扱う
+        tabBarController.highlightButton(at: 2)
+        tabBarController.setAction({
+            // ボタンが押されたらImageViewControllerをモーダルで表示する
+            let describeRecordViewController = self.storyboard?.instantiateViewController(withIdentifier: "DescribeRecord")
+            self.present(describeRecordViewController!, animated: true, completion: nil)
+        }, at: 2)
     }
 }
 
